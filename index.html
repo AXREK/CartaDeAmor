@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kevin & Adriana 🌸</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      min-height:100vh;
+      background:linear-gradient(160deg,#fdf4ff 0%,#f3e8ff 40%,#fde8f5 100%);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Lato',sans-serif;
+      overflow:hidden; position:relative;
+    }
+    #petals-canvas {
+      position:fixed; top:0; left:0;
+      width:100vw; height:100vh;
+      pointer-events:none; z-index:0;
+    }
+    .container {
+      display:flex; flex-direction:column; align-items:center;
+      width:100%; max-width:480px; padding:30px 24px;
+      position:relative; z-index:1;
+    }
+    .card {
+      background:rgba(255,255,255,0.58);
+      backdrop-filter:blur(14px);
+      border-radius:28px;
+      border:1px solid rgba(150,60,180,0.15);
+      box-shadow:0 20px 60px rgba(130,50,160,0.12);
+      padding:32px 28px; width:100%;
+      animation:fadeIn 1.2s ease forwards;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .top-section { display:flex; gap:16px; align-items:flex-start; margin-bottom:24px; }
+    .text-block { flex:1; padding-top:8px; }
+    .title { font-family:'Playfair Display',serif; font-size:16px; color:#7b2d8b; font-weight:700; line-height:1.4; margin-bottom:14px; }
+    .phrase { font-size:13.5px; color:#4a2a5a; line-height:1.7; margin-bottom:10px; font-style:italic; }
+    .signature { font-family:'Playfair Display',serif; font-size:14px; color:#7b2d8b; font-style:italic; margin-top:8px; }
+    .tree-wrap { width:160px; min-width:160px; position:relative; height:190px; }
+    canvas#tree { position:absolute; top:0; left:0; }
+    .divider { width:80%; height:1px; background:linear-gradient(to right,transparent,rgba(123,45,139,0.3),transparent); margin:4px auto 20px; }
+    .counter-label { text-align:center; font-size:13px; color:#7a5a8a; margin-bottom:12px; letter-spacing:0.5px; }
+    .names { font-family:'Playfair Display',serif; font-size:18px; color:#7b2d8b; font-weight:700; text-align:center; margin-bottom:6px; }
+    .counter { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+    .unit { display:flex; flex-direction:column; align-items:center; min-width:60px; }
+    .unit-value { font-size:32px; font-weight:300; color:#7b2d8b; line-height:1; font-family:'Playfair Display',serif; }
+    .unit-label { font-size:10px; letter-spacing:1.5px; color:#9a6aaa; text-transform:uppercase; margin-top:4px; }
+    .sep { font-size:28px; color:rgba(123,45,139,0.35); align-self:flex-start; padding-top:4px; }
+    .heart-beat {
+      text-align:center; font-size:28px; margin-top:16px;
+      animation:heartbeat 1.2s ease-in-out infinite;
+      cursor:pointer; display:inline-block; width:100%;
+      text-decoration:none; transition:transform .2s;
+      user-select:none;
+    }
+    .heart-beat:hover { transform:scale(1.3); }
+    .heart-hint { text-align:center; font-size:11px; color:#9a6aaa; letter-spacing:1px; margin-top:6px; opacity:.7; }
+    @keyframes heartbeat { 0%,100%{transform:scale(1)} 14%{transform:scale(1.2)} 28%{transform:scale(1)} 42%{transform:scale(1.15)} 56%{transform:scale(1)} }
+  </style>
+</head>
+<body>
+<canvas id="petals-canvas"></canvas>
+<div class="container">
+  <div class="card">
+    <div class="top-section">
+      <div class="text-block">
+        <div class="title">Orquídeas para el<br>amor de mi vida:</div>
+        <div class="phrase">Si pudiera elegir un lugar seguro, sería a tu lado.</div>
+        <div class="phrase">Cuanto más tiempo estoy contigo más te amo.</div>
+        <div class="signature">— I Love</div>
+      </div>
+      <div class="tree-wrap">
+        <canvas id="tree" width="160" height="190"></canvas>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="names">Kevin & Adriana</div>
+    <div class="counter-label">Mi amor por ti comenzó hace...</div>
+    <div class="counter">
+      <div class="unit"><div class="unit-value" id="days">000</div><div class="unit-label">días</div></div>
+      <div class="sep">:</div>
+      <div class="unit"><div class="unit-value" id="hours">00</div><div class="unit-label">horas</div></div>
+      <div class="sep">:</div>
+      <div class="unit"><div class="unit-value" id="minutes">00</div><div class="unit-label">minutos</div></div>
+      <div class="sep">:</div>
+      <div class="unit"><div class="unit-value" id="seconds">00</div><div class="unit-label">segundos</div></div>
+    </div>
+    <a href="carta.html" class="heart-beat">💜</a>
+    <div class="heart-hint">tócame ✉️</div>
+  </div>
+</div>
+<script>
+/* ── COUNTER ── */
+const start=new Date('2023-02-27T00:00:00');
+function pad(n,l=2){return String(n).padStart(l,'0');}
+function tick(){
+  const d=Date.now()-start;
+  document.getElementById('days').textContent=pad(Math.floor(d/86400000),3);
+  document.getElementById('hours').textContent=pad(Math.floor((d%86400000)/3600000));
+  document.getElementById('minutes').textContent=pad(Math.floor((d%3600000)/60000));
+  document.getElementById('seconds').textContent=pad(Math.floor((d%60000)/1000));
+}
+tick();setInterval(tick,1000);
+
+/* ── TREE ── */
+const tC=document.getElementById('tree'),tc=tC.getContext('2d'),TW=160,TH=190;
+
+function insideHeart(x,y){
+  return Math.pow((x/16)**2+(-y/13)**2-1,3)-(x/16)**2*(-y/13)**3<=0;
+}
+
+function drawOrchid(ctx,x,y,r,a){
+  ctx.save();ctx.globalAlpha=a;ctx.translate(x,y);
+  const cols=['#da7ef5','#b44fcc','#e8a0ff','#9b30b8','#c96de0'];
+  for(let i=0;i<5;i++){
+    ctx.save();ctx.rotate(i/5*Math.PI*2);
+    ctx.beginPath();ctx.ellipse(0,-r*.6,r*.3,r*.72,0,0,Math.PI*2);
+    const g=ctx.createRadialGradient(0,-r*.6,0,0,-r*.6,r*.72);
+    g.addColorStop(0,'#f0b8ff');g.addColorStop(.4,cols[i%5]);g.addColorStop(1,'#8b1aaa');
+    ctx.fillStyle=g;ctx.fill();ctx.restore();
+  }
+  ctx.beginPath();ctx.ellipse(0,r*.35,r*.45,r*.38,0,0,Math.PI*2);
+  const lg=ctx.createRadialGradient(0,r*.35,0,0,r*.35,r*.45);
+  lg.addColorStop(0,'#ffe0ff');lg.addColorStop(.5,'#da7ef5');lg.addColorStop(1,'#9b30b8');
+  ctx.fillStyle=lg;ctx.fill();
+  ctx.fillStyle='rgba(100,0,120,.35)';
+  for(let d=0;d<4;d++){ctx.beginPath();ctx.arc((Math.random()-.5)*r*.5,r*.25+Math.random()*r*.2,r*.06,0,Math.PI*2);ctx.fill();}
+  ctx.beginPath();ctx.arc(0,0,r*.22,0,Math.PI*2);ctx.fillStyle='#f5d0ff';ctx.fill();
+  ctx.restore();
+}
+
+function drawTree(){
+  const tx=TW/2,tb=TH-8,tt=TH*.50;
+  const tg=tc.createLinearGradient(tx-8,0,tx+8,0);
+  tg.addColorStop(0,'#6b3f1f');tg.addColorStop(.5,'#9b6030');tg.addColorStop(1,'#4a2c10');
+  tc.beginPath();tc.moveTo(tx-8,tb);
+  tc.bezierCurveTo(tx-6,tt+30,tx-4,tt+10,tx,tt);
+  tc.bezierCurveTo(tx+4,tt+10,tx+6,tt+30,tx+8,tb);
+  tc.fillStyle=tg;tc.fill();
+  for(let i=-1;i<=1;i++){tc.beginPath();tc.moveTo(tx+i*5,tb-6);tc.quadraticCurveTo(tx+i*22,tb-2,tx+i*28,tb);tc.lineWidth=3;tc.strokeStyle='#7d4e2d';tc.stroke();}
+  [{sx:tx,sy:tt+15,ex:tx-30,ey:tt-8},{sx:tx,sy:tt+10,ex:tx+28,ey:tt-12}].forEach(b=>{
+    tc.beginPath();tc.moveTo(b.sx,b.sy);tc.quadraticCurveTo(b.sx+(b.ex-b.sx)*.3,b.sy-8,b.ex,b.ey);
+    tc.lineWidth=4;tc.strokeStyle='#8B5E3C';tc.stroke();
+  });
+}
+
+const tFlowers=[];let tFrame=0;
+(()=>{
+  const cx=TW/2,cy=TH*.50-22;
+  for(let x=-17;x<=17;x+=1.2)for(let y=-14;y<=14;y+=1.2)
+    if(insideHeart(x,y)&&Math.random()<.72)
+      tFlowers.push({x:cx+x*3.8,y:cy+y*3.8,r:4.5+Math.random()*3.5,
+        delay:Math.random()*120,ss:.012+Math.random()*.01,
+        sa:.5+Math.random(),ph:Math.random()*Math.PI*2,a:0});
+})();
+
+(function tLoop(){
+  tc.clearRect(0,0,TW,TH);drawTree();tFrame++;
+  tFlowers.forEach(f=>{
+    if(tFrame>f.delay)f.a=Math.min(1,f.a+.025);
+    drawOrchid(tc,f.x+Math.sin(tFrame*f.ss+f.ph)*f.sa,f.y+Math.cos(tFrame*f.ss*.7+f.ph)*f.sa*.5,f.r,f.a);
+  });
+  requestAnimationFrame(tLoop);
+})();
+
+/* ── FALLING PETALS (full screen) ── */
+const pc=document.getElementById('petals-canvas'),px=pc.getContext('2d');
+function resizePC(){pc.width=innerWidth;pc.height=innerHeight;}
+resizePC();window.addEventListener('resize',resizePC);
+
+function mkPetal(c1,c2,sz,shape='ellipse'){
+  const oc=document.createElement('canvas');oc.width=oc.height=sz*2+6;
+  const ox=oc.getContext('2d');ox.translate(sz+3,sz+3);
+  if(shape==='orchid'){
+    // mini orchid petal
+    ox.beginPath();ox.ellipse(0,-sz*.45,sz*.32,sz*.68,0,0,Math.PI*2);
+    const g=ox.createRadialGradient(0,-sz*.45,0,0,-sz*.45,sz*.68);
+    g.addColorStop(0,c1);g.addColorStop(1,c2);
+    ox.fillStyle=g;ox.globalAlpha=.85;ox.fill();
+    // labellum dot
+    ox.beginPath();ox.ellipse(0,sz*.3,sz*.28,sz*.22,0,0,Math.PI*2);
+    ox.fillStyle=c1;ox.fill();
+  } else {
+    ox.beginPath();ox.ellipse(0,-sz*.4,sz*.35,sz*.7,0,0,Math.PI*2);
+    const g=ox.createRadialGradient(0,-sz*.4,0,0,-sz*.4,sz*.7);
+    g.addColorStop(0,c1);g.addColorStop(1,c2);
+    ox.fillStyle=g;ox.globalAlpha=.88;ox.fill();
+  }
+  return oc;
+}
+
+function mkHeart(color,sz){
+  const oc=document.createElement('canvas');oc.width=oc.height=sz*3+4;
+  const ox=oc.getContext('2d');ox.translate(sz*1.5+2,sz*1.5+2);
+  ox.scale(sz/16,sz/16);ox.beginPath();
+  for(let t=0;t<=Math.PI*2;t+=.05){
+    const hx=16*Math.pow(Math.sin(t),3);
+    const hy=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));
+    t===0?ox.moveTo(hx,hy):ox.lineTo(hx,hy);
+  }
+  ox.fillStyle=color;ox.fill();return oc;
+}
+
+const sprites=[
+  mkPetal('#f0b8ff','#9b30b8',8,'orchid'),
+  mkPetal('#e8a0ff','#7b2d8b',7,'orchid'),
+  mkPetal('#da7ef5','#8b1aaa',6,'orchid'),
+  mkPetal('#f5d0ff','#b44fcc',9,'ellipse'),
+  mkPetal('#c96de0','#6a0f87',5,'ellipse'),
+  mkHeart('rgba(180,60,210,.75)',8),
+  mkHeart('rgba(220,130,255,.7)',7),
+];
+
+function newPetal(randomY=false){
+  return {
+    x:Math.random()*innerWidth,
+    y:randomY?Math.random()*innerHeight:-20-Math.random()*80,
+    sp:sprites[Math.floor(Math.random()*sprites.length)],
+    vy:.45+Math.random()*1.2,
+    vx:(Math.random()-.5)*.4,
+    rot:Math.random()*Math.PI*2,
+    rs:(Math.random()-.5)*.04,
+    sw:Math.random()*Math.PI*2,
+    swS:.006+Math.random()*.012,
+    swA:14+Math.random()*26,
+    op:.4+Math.random()*.6,
+    sc:.5+Math.random()*.9,
+  };
+}
+
+const petals=Array.from({length:44},()=>newPetal(true));
+
+(function pLoop(){
+  px.clearRect(0,0,pc.width,pc.height);
+  petals.forEach((p,i)=>{
+    p.y+=p.vy;p.x+=p.vx+Math.sin(p.sw)*p.swA*.012;
+    p.sw+=p.swS;p.rot+=p.rs;
+    if(p.y>pc.height+40||p.x<-60||p.x>pc.width+60)petals[i]=newPetal(false);
+    px.save();px.globalAlpha=p.op;
+    px.translate(p.x,p.y);px.rotate(p.rot);px.scale(p.sc,p.sc);
+    px.drawImage(p.sp,-p.sp.width/2,-p.sp.height/2);
+    px.restore();
+  });
+  requestAnimationFrame(pLoop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Una carta especial 💜</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+    #bg-canvas{
+      position:fixed;top:0;left:0;
+      width:100vw;height:100vh;
+      pointer-events:none;z-index:0;
+    }
+
+```
+/* ── ENVELOPE SCENE ── */
+#envelope-scene{
+  position:fixed;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:10;
+}
+#envelope-scene.hiding{
+  opacity:0;transform:scale(.82) translateY(20px);
+  pointer-events:none;
+}
+#env-wrap{
+  display:flex;flex-direction:column;
+  align-items:center;gap:20px;
+  perspective:1100px;
+  animation:envAppear .9s cubic-bezier(.2,0,.2,1) forwards;
+}
+@keyframes envAppear{
+  from{opacity:0;transform:scale(.72) translateY(36px);}
+  to{opacity:1;transform:scale(1) translateY(0);}
+}
+
+/* ── ENVELOPE BODY ── */
+#envelope{
+  position:relative;
+  width:320px;height:200px;
+  cursor:pointer;
+  filter:drop-shadow(0 14px 36px rgba(120,50,160,.24));
+  transition:filter .3s, transform .2s;
+}
+#envelope:hover{
+  filter:drop-shadow(0 18px 44px rgba(120,50,160,.34));
+  transform:translateY(-3px);
+}
+.env-body{
+  position:absolute;inset:0;
+  background:linear-gradient(170deg,#f8eeff,#ede0fc);
+  border-radius:6px;
+  z-index:1;
+}
+.env-interior{
+  position:absolute;inset:0;
+  background:linear-gradient(170deg,#fff8ff,#f3e6ff);
+  border-radius:6px;
+  z-index:1;
+}
+
+/* CSS triangle folds — the classic envelope X */
+.env-fold-left{
+  position:absolute;top:0;left:0;z-index:3;
+  width:0;height:0;
+  border-top:100px solid transparent;
+  border-bottom:100px solid transparent;
+  border-left:160px solid rgba(170,120,210,.16);
+}
+.env-fold-right{
+  position:absolute;top:0;right:0;z-index:3;
+  width:0;height:0;
+  border-top:100px solid transparent;
+  border-bottom:100px solid transparent;
+  border-right:160px solid rgba(155,100,200,.14);
+}
+.env-fold-bottom{
+  position:absolute;bottom:0;left:0;z-index:3;
+  width:0;height:0;
+  border-left:160px solid transparent;
+  border-right:160px solid transparent;
+  border-bottom:108px solid rgba(165,110,210,.18);
+}
+
+/* ── LETTER RISING (hidden inside envelope first) ── */
+#letter-rising{
+  will-change: transform;
+  transform: translateY(100%);
+}
+.lr-lines{
+  padding:20px 16px 0;
+  display:flex;flex-direction:column;gap:11px;
+}
+.lr-line{
+  height:2px;background:linear-gradient(to right,rgba(160,100,220,.12),rgba(160,100,220,.08));
+  border-radius:2px;
+}
+.lr-line:nth-child(2){width:75%;}
+.lr-line:nth-child(3){width:92%;}
+.lr-line:nth-child(4){width:65%;}
+.lr-line:nth-child(5){width:84%;}
+/* Small heart watermark */
+.lr-wm{
+  position:absolute;
+  bottom:16px;right:16px;
+  font-size:28px;opacity:.06;
+  transform:rotate(-15deg);
+}
+
+/* ── FLAP ── */
+#env-flap{
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+/* Subtle sheen on flap */
+#env-flap::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,transparent 60%);
+  clip-path:polygon(0 0, 100% 0, 50% 80%);
+}
+
+/* ── SEAL ── */
+#seal{
+  position:absolute;
+  bottom:24px;left:50%;
+  transform:translateX(-50%);
+  font-size:28px;
+  animation:sealPulse 2.2s ease-in-out infinite;
+  filter:drop-shadow(0 2px 8px rgba(80,0,130,.35));
+  z-index:8;
+  cursor:pointer;
+}
+@keyframes sealPulse{
+  0%,100%{transform:translateX(-50%) scale(1);}
+  50%{transform:translateX(-50%) scale(1.18);}
+}
+#seal.popping{
+  animation:sealPop .45s cubic-bezier(.4,0,.6,1) forwards;
+}
+@keyframes sealPop{
+  0%{transform:translateX(-50%) scale(1);opacity:1;}
+  35%{transform:translateX(-50%) scale(1.5);opacity:.6;}
+  100%{transform:translateX(-50%) scale(0);opacity:0;}
+}
+
+/* ── TAP HINT ── */
+.tap-hint{
+  font-size:13px;color:#8050a8;
+  letter-spacing:1.8px;
+  animation:hintBob 2.8s ease-in-out infinite;
+  opacity:.75;
+}
+@keyframes hintBob{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-6px);}
+}
+
+/* ── LETTER SCENE ── */
+#letter-scene{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;
+  overflow-y:auto;
+  padding:36px 20px 56px;
+  z-index:20;
+  opacity:0;pointer-events:none;
+  transition:opacity .9s ease;
+}
+#letter-scene.visible{
+  opacity:1;pointer-events:all;
+}
+
+/* Paper */
+#letter-paper{
+  width:100%;max-width:400px;
+  position:relative;
+  background:#fffcfe;
+  border-radius:3px;
+  box-shadow:
+    0 1px 0 rgba(190,140,230,.2),
+    0 4px 16px rgba(140,80,200,.1),
+    0 20px 50px rgba(100,50,160,.14),
+    0 50px 80px rgba(80,30,130,.08);
+  padding:40px 34px 44px;
+  transform:translateY(50px) scale(.95);
+  animation:paperLand .75s cubic-bezier(.2,0,.2,1) forwards;
+
+  /* Lined paper texture */
+  background-image:
+    repeating-linear-gradient(
+      transparent,
+      transparent 28px,
+      rgba(180,130,220,.07) 28px,
+      rgba(180,130,220,.07) 29px
+    );
+}
+@keyframes paperLand{to{transform:translateY(0) scale(1);}}
+
+/* Top accent line */
+#letter-paper::before{
+  content:'';
+  position:absolute;top:0;left:10%;right:10%;height:2px;
+  background:linear-gradient(to right,transparent,rgba(150,90,210,.4),transparent);
+}
+
+/* Corner ornaments */
+.co{
+  position:absolute;font-size:10px;
+  color:rgba(150,90,200,.3);line-height:1;
+}
+.co.tl{top:14px;left:16px;}
+.co.tr{top:14px;right:16px;}
+.co.bl{bottom:16px;left:16px;}
+.co.br{bottom:16px;right:16px;}
+
+/* Left accent margin line */
+#letter-paper::after{
+  content:'';
+  position:absolute;top:60px;bottom:60px;left:68px;
+  width:1px;
+  background:linear-gradient(to bottom,transparent,rgba(210,160,240,.3),transparent);
+}
+
+/* Header */
+.ltr-header{
+  text-align:center;
+  margin-bottom:26px;
+}
+.ltr-ornament{
+  font-size:12px;color:rgba(140,80,190,.45);
+  letter-spacing:8px;margin-bottom:10px;
+}
+.ltr-to{
+  font-family:'Playfair Display',serif;
+  font-size:14px;color:#7b2d8b;
+  font-style:italic;margin-bottom:5px;
+}
+.ltr-date{
+  font-size:10px;color:rgba(100,60,130,.45);
+  letter-spacing:2.5px;text-transform:uppercase;
+}
+.ltr-hr{
+  width:55%;margin:18px auto 0;
+  height:1px;
+  background:linear-gradient(to right,transparent,rgba(160,100,210,.3),transparent);
+}
+
+/* Body */
+.ltr-body{
+  font-family:'Dancing Script',cursive;
+  font-size:19px;line-height:1.9;
+  color:#321540;font-weight:500;
+  margin-bottom:30px;
+}
+.ltr-body p{
+  margin-bottom:20px;
+  opacity:0;transform:translateY(10px);
+  transition:opacity .75s ease, transform .75s ease;
+}
+.ltr-body p.revealed{opacity:1;transform:translateY(0);}
+
+/* Footer */
+.ltr-footer{
+  text-align:right;
+  padding-top:18px;
+  border-top:1px solid rgba(160,100,210,.13);
+}
+.ltr-sig{
+  font-family:'Dancing Script',cursive;
+  font-size:17px;color:#6a2080;font-weight:500;
+  margin-bottom:3px;
+  opacity:0;transition:opacity .8s ease;
+}
+.ltr-name{
+  font-family:'Dancing Script',cursive;
+  font-size:24px;color:#7b2d8b;font-weight:700;
+  margin-bottom:8px;
+  opacity:0;transition:opacity .8s ease .2s;
+}
+.ltr-hearts{
+  font-size:15px;letter-spacing:5px;
+  opacity:0;transition:opacity .8s ease .4s;
+}
+.ltr-footer.revealed .ltr-sig,
+.ltr-footer.revealed .ltr-name,
+.ltr-footer.revealed .ltr-hearts{opacity:1;}
+
+/* Back button */
+.back-btn{
+  display:inline-block;margin-top:22px;
+  font-size:11px;color:rgba(110,55,150,.55);
+  text-decoration:none;letter-spacing:1.8px;
+  border:1px solid rgba(160,100,210,.22);
+  padding:9px 22px;border-radius:22px;
+  transition:all .25s;
+  background:rgba(255,255,255,.45);
+  backdrop-filter:blur(10px);
+}
+.back-btn:hover{
+  background:rgba(255,255,255,.85);
+  color:#7b2d8b;
+  border-color:rgba(160,100,210,.45);
+  transform:translateY(-1px);
+}
+```
+
+  </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- PHASE 1: ENVELOPE -->
+
+<div id="envelope-scene">
+  <div id="env-wrap">
+    <div id="envelope">
+      <div class="env-body"></div>
+      <div class="env-interior"></div>
+
+```
+  <!-- Letter hidden inside, rises on open -->
+  <div id="letter-rising">
+    <div class="lr-lines">
+      <div class="lr-line"></div>
+      <div class="lr-line"></div>
+      <div class="lr-line"></div>
+      <div class="lr-line"></div>
+      <div class="lr-line"></div>
+    </div>
+    <div class="lr-wm">💜</div>
+  </div>
+
+  <!-- Decorative folds -->
+  <div class="env-fold-left"></div>
+  <div class="env-fold-right"></div>
+  <div class="env-fold-bottom"></div>
+
+  <!-- THE FLAP — rotates open -->
+  <div id="env-flap">
+    <div id="seal">💜</div>
+  </div>
+</div>
+<div class="tap-hint">toca para abrir ✉️</div>
+```
+
+  </div>
+</div>
+
+<!-- PHASE 2: FULL LETTER -->
+
+<div id="letter-scene">
+  <div id="letter-paper">
+    <div class="co tl">✦</div>
+    <div class="co tr">✦</div>
+    <div class="co bl">✦</div>
+    <div class="co br">✦</div>
+
+```
+<div class="ltr-header">
+  <div class="ltr-ornament">✿  ✦  ✿</div>
+  <div class="ltr-to">Para: Adriana, mi amor</div>
+  <div class="ltr-date">Marzo 2026</div>
+  <div class="ltr-hr"></div>
+</div>
+
+<div class="ltr-body">
+  <p>Hola mi amor, espero que hoy en tu cumpleaños sea un gran día para ti y lo sientas tan diferente, que te hayas sentido feliz y especial como mereces.</p>
+  <p>Espero que te haya gustado celebrarlo y que cada uno de los regalos te hayan gustado. Y con la promesa de avanzar los dos, la cumplamos y logremos ya comprometernos y casarnos bb.</p>
+  <p>Que en serio quiero vivir junto a ti, ya que ya estamos mayores y debemos seguir adelante mi amor, y progresar como pareja.</p>
+  <p>Espero que cada día estaré para ti y en todo lo que necesites bb. Sé que estás dando tu 100% para poder estudiar y buscar trabajo, pero tú puedes bb, solo sigue... que la esperanza es lo que nos ayuda a seguir. 💜</p>
+</div>
+
+<div class="ltr-footer" id="ltr-footer">
+  <div class="ltr-sig">Con todo mi amor,</div>
+  <div class="ltr-name">Kevin 💜</div>
+  <div class="ltr-hearts">💜 💜 💜</div>
+</div>
+```
+
+  </div>
+  <a href="index.html" class="back-btn">← Volver</a>
+</div>
+
+<script>
+const envEl = document.getElementById('envelope');
+const flapEl = document.getElementById('env-flap');
+const sealEl = document.getElementById('seal');
+const riseEl = document.getElementById('letter-rising');
+const envScene = document.getElementById('envelope-scene');
+const ltScene = document.getElementById('letter-scene');
+
+let state = "idle";
+let startTime = null;
+
+function animateOpen(timestamp){
+  if(!startTime) startTime = timestamp;
+  const t = timestamp - startTime;
+
+  // TIMELINE (ms)
+  const sealEnd = 300;
+  const flapMid = 900;
+  const flapEnd = 1400;
+  const letterStart = 1200;
+  const end = 2600;
+
+  // 1. SEAL
+  if(t < sealEnd){
+    const progress = t / sealEnd;
+    sealEl.style.transform = `translateX(-50%) scale(${1 + progress * 0.6})`;
+    sealEl.style.opacity = 1 - progress;
+  }
+
+  // 2. FLAP (realistic easing)
+  if(t >= 300 && t < flapMid){
+    const p = (t - 300) / (flapMid - 300);
+    const ease = p*p*(3-2*p);
+    flapEl.style.transform = `rotateX(${-90 * ease}deg)`;
+  }
+
+  if(t >= flapMid && t < flapEnd){
+    const p = (t - flapMid) / (flapEnd - flapMid);
+    const ease = p*p;
+    flapEl.style.zIndex = 0;
+    flapEl.style.transform = `rotateX(${-90 - (90 * ease)}deg)`;
+  }
+
+  // 3. LETTER RISE (smooth + natural)
+  if(t >= letterStart){
+    const p = (t - letterStart) / 800;
+    const ease = 1 - Math.pow(1 - p, 3);
+    riseEl.style.transform = `translateY(${100 - ease*160}%)`;
+  }
+
+  // 4. FADE OUT ENVELOPE
+  if(t > 1800){
+    const p = (t - 1800) / 500;
+    envScene.style.opacity = 1 - p;
+    envScene.style.transform = `scale(${1 - p*0.2}) translateY(${p*20}px)`;
+  }
+
+  // END
+  if(t < end){
+    requestAnimationFrame(animateOpen);
+  } else {
+    envScene.style.display = "none";
+    ltScene.classList.add('visible');
+
+    const paras = document.querySelectorAll('.ltr-body p');
+    paras.forEach((p,i)=>{
+      setTimeout(()=>p.classList.add('revealed'), i*250);
+    });
+
+    setTimeout(()=>{
+      document.getElementById('ltr-footer').classList.add('revealed');
+    }, paras.length*250 + 200);
+  }
+}
+
+function openLetter(){
+  if(state !== "idle") return;
+  state = "opening";
+
+  sealEl.style.animation = "none";
+  requestAnimationFrame(animateOpen);
+}
+
+envEl.addEventListener('click', openLetter);
+envEl.addEventListener('touchstart',(e)=>{
+  e.preventDefault();
+  openLetter();
+},{passive:false});
+</script>
+
+</body>
+</html>
